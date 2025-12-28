@@ -1,9 +1,9 @@
 import { sb } from "../../lib/supabase";
+import { analyzeReview } from "../../lib/ai";
 
 let currentTxId: string | null = null;
-let currentStudentId: string | null = null; // Şagirdin ID-sini yadda saxlayırıq
 
-// UI Helpers
+// Helper: Toast mesajı göstərmək üçün
 const showToast = (msg: string, type: "success" | "error") => {
   // @ts-ignore
   if (window.showToast) window.showToast(msg, type);
@@ -32,11 +32,9 @@ export async function verifyReviewCode() {
     if (data.review_text)
       return showToast("Bu kodla artıq rəy yazılıb!", "error");
 
-    // ID-ləri yadda saxla
     currentTxId = data.id;
-    currentStudentId = data.student_id;
 
-    // UI Doldur
+    // UI Doldur (Array check ilə təhlükəsiz)
     const sData: any = data.students;
     const bData: any = data.books;
     const stName =
@@ -45,10 +43,12 @@ export async function verifyReviewCode() {
     const bkTitle =
       (Array.isArray(bData) ? bData[0]?.title : bData?.title) || "Kitab";
 
-    document.getElementById("revStudentName")!.innerText = stName;
-    document.getElementById("revBookTitle")!.innerText = bkTitle;
+    const nameEl = document.getElementById("revStudentName");
+    const titleEl = document.getElementById("revBookTitle");
 
-    // Ekranı dəyiş
+    if (nameEl) nameEl.innerText = stName;
+    if (titleEl) titleEl.innerText = bkTitle;
+
     document.getElementById("reviewStep1")?.classList.add("hidden");
     document.getElementById("reviewStep2")?.classList.remove("hidden");
   } catch (e) {
@@ -57,80 +57,91 @@ export async function verifyReviewCode() {
   }
 }
 
-// 2. ULDUZ VERMƏK
+// 2. ULDUZ VERMƏK (Bu funksiya əskik idi!)
 export function setRating(n: number) {
   const stars = document.querySelectorAll("#starContainer span");
   stars.forEach((s, i) => {
     if (i < n) s.classList.add("text-yellow-400");
     else s.classList.remove("text-yellow-400");
   });
-  (document.getElementById("reviewRating") as HTMLInputElement).value =
-    n.toString();
+  const ratingInput = document.getElementById(
+    "reviewRating"
+  ) as HTMLInputElement;
+  if (ratingInput) ratingInput.value = n.toString();
 }
 
-// 3. RƏYİ GÖNDƏRMƏK (+ XP ARTIRMAQ)
+// 3. RƏYİ GÖNDƏRMƏK (AI İnteqrasiyası ilə)
 export async function submitReview() {
-  const text = (
-    document.getElementById("reviewText") as HTMLInputElement
-  ).value.trim();
-  const rating = (document.getElementById("reviewRating") as HTMLInputElement)
-    .value;
+  const textEl = document.getElementById("reviewText") as HTMLInputElement;
+  const ratingEl = document.getElementById("reviewRating") as HTMLInputElement;
+  const btn = document.getElementById("submitReviewBtn") as HTMLButtonElement;
+
+  const text = textEl.value.trim();
+  const rating = ratingEl.value;
+  const bookTitle =
+    document.getElementById("revBookTitle")?.innerText || "Kitab";
 
   if (!text) return showToast("Rəy yazın!", "error");
   if (rating === "0") return showToast("Ulduz seçin!", "error");
 
-  // 1. Rəyi yaz
-  const { error } = await sb
-    .from("transactions")
-    .update({
-      review_text: text,
-      rating: parseInt(rating),
-      is_review_approved: false, // Admin təsdiqi lazımdır
-    })
-    .eq("id", currentTxId);
+  if (btn) {
+    btn.innerText = "AI YOXLAYIR...";
+    btn.disabled = true;
+  }
 
-  if (error) {
-    showToast("Xəta baş verdi", "error");
-  } else {
-    // 2. Şagirdə Xal Ver (XP Logic)
-    // Gələcəkdə bura AI Balı gələcək. Hələlik +10 Standart.
-    if (currentStudentId) {
-      await addXpToStudent(currentStudentId, 10);
+  try {
+    // 1. AI Təhlili
+    const aiResult = await analyzeReview(bookTitle, text);
+
+    // 2. SÖYÜŞ VARSA -> STOP 🛑
+    if (!aiResult.approved) {
+      showToast(`⛔ ${aiResult.feedback}`, "error");
+      if (btn) {
+        btn.innerText = "GÖNDƏR";
+        btn.disabled = false;
+      }
+      return;
     }
 
-    showToast("Rəy qəbul olundu! +10 XP qazandınız! 🎉", "success");
+    // 3. TƏMİZDİRSƏ -> BAZAYA YAZIRIQ (approved = false)
+    const { error } = await sb
+      .from("transactions")
+      .update({
+        review_text: text,
+        rating: parseInt(rating),
+        is_review_approved: false, // Admin gözləyirik
+        ai_analysis: aiResult.analysis, // Müəllim görəcək
+        ai_score: aiResult.score, // Təsdiqlənəndə veriləcək xal
+      })
+      .eq("id", currentTxId);
+
+    if (error) throw error;
+
+    showToast(
+      `✅ Rəy göndərildi! Müəllim təsdiq edəndə +${aiResult.score} XP qazanacaqsınız.`,
+      "success"
+    );
 
     // Modalı bağla
     // @ts-ignore
     if (window.closeModal) window.closeModal("reviewModal");
 
     // Reset
-    (document.getElementById("reviewCodeInput") as HTMLInputElement).value = "";
-    (document.getElementById("reviewText") as HTMLInputElement).value = "";
-    setRating(0);
+    const codeInp = document.getElementById(
+      "reviewCodeInput"
+    ) as HTMLInputElement;
+    if (codeInp) codeInp.value = "";
+    textEl.value = "";
+    setRating(0); // Reset rating
     document.getElementById("reviewStep1")?.classList.remove("hidden");
     document.getElementById("reviewStep2")?.classList.add("hidden");
-  }
-}
-
-// XP Artırma Funksiyası (Helper)
-async function addXpToStudent(studentId: string, amount: number) {
-  try {
-    // Hazırkı balı al
-    const { data } = await sb
-      .from("students")
-      .select("xp_points")
-      .eq("id", studentId)
-      .single();
-    if (data) {
-      const newXp = (data.xp_points || 0) + amount;
-      // Yenilə
-      await sb
-        .from("students")
-        .update({ xp_points: newXp })
-        .eq("id", studentId);
-    }
   } catch (e) {
-    console.error("XP artırıla bilmədi:", e);
+    console.error(e);
+    showToast("Xəta baş verdi", "error");
+  } finally {
+    if (btn) {
+      btn.innerText = "GÖNDƏR";
+      btn.disabled = false;
+    }
   }
 }

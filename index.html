@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Maarif Global Library</title>
+
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -12,6 +13,7 @@
       href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"
       rel="stylesheet"
     />
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -30,7 +32,9 @@
         },
       };
     </script>
+
     <style>
+      /* Scrollbar */
       .custom-scrollbar::-webkit-scrollbar {
         width: 6px;
       }
@@ -38,6 +42,8 @@
         background: #e5e7eb;
         border-radius: 10px;
       }
+
+      /* Animations */
       .animate-fade-in {
         animation: fadeIn 0.3s ease-out;
       }
@@ -51,6 +57,8 @@
           transform: scale(1);
         }
       }
+
+      /* Suggestions Box */
       .suggestions {
         position: absolute;
         top: 100%;
@@ -78,6 +86,8 @@
         color: #9333ea;
         padding-left: 15px;
       }
+
+      /* Toast Notification */
       #toast-container {
         position: fixed;
         top: 20px;
@@ -145,6 +155,7 @@
         </div>
         <button
           id="btnAdminLogin"
+          onclick="openModal('teacherModal')"
           class="px-6 py-2 rounded-full bg-gradient-to-r from-primary to-secondary text-white font-bold shadow-md hover:shadow-lg transition text-sm cursor-pointer"
         >
           <i class="fas fa-user-shield mr-2"></i> Admin Girişi
@@ -174,16 +185,19 @@
           />
           <i class="fas fa-search absolute right-5 top-5 text-gray-400"></i>
         </div>
+
         <div class="flex gap-3">
           <button
             id="btnBorrowBook"
-            class="flex-1 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:scale-[1.02] transition flex items-center justify-center gap-2 text-lg"
+            onclick="openBorrowModal()"
+            class="flex-1 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:scale-[1.02] transition flex items-center justify-center gap-2 text-lg cursor-pointer"
           >
             <i class="fas fa-book-reader"></i> KİTAB GÖTÜR
           </button>
           <button
             id="btnWriteReview"
-            class="flex-1 py-4 bg-white text-secondary border-2 border-secondary font-bold rounded-2xl shadow-xl hover:bg-secondary hover:text-white hover:scale-[1.02] transition flex items-center justify-center gap-2 text-lg"
+            onclick="openModal('reviewModal')"
+            class="flex-1 py-4 bg-white text-secondary border-2 border-secondary font-bold rounded-2xl shadow-xl hover:bg-secondary hover:text-white hover:scale-[1.02] transition flex items-center justify-center gap-2 text-lg cursor-pointer"
           >
             <i class="fas fa-pen-nib"></i> RƏY YAZ
           </button>
@@ -241,10 +255,12 @@
       >
         <button
           id="closeBorrowModal"
+          onclick="closeModal('borrowModal')"
           class="absolute top-5 right-6 text-gray-400 hover:text-red-500 transition"
         >
           <i class="fas fa-times text-2xl"></i>
         </button>
+
         <div id="step1" class="text-center">
           <div
             class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-6 shadow-inner"
@@ -263,11 +279,13 @@
           />
           <button
             id="verifyCodeBtn"
+            onclick="verifySchoolCode()"
             class="w-full py-4 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition shadow-lg"
           >
             YOXLA <i class="fas fa-arrow-right ml-2"></i>
           </button>
         </div>
+
         <div id="step2" class="hidden">
           <div
             class="bg-green-50 p-4 rounded-2xl mb-6 text-center border border-green-100"
@@ -285,8 +303,8 @@
             </h3>
           </div>
           <div class="mb-4 relative">
-            <label class="text-xs font-bold text-gray-500 ml-1">KİTAB</label
-            ><input
+            <label class="text-xs font-bold text-gray-500 ml-1">KİTAB</label>
+            <input
               type="text"
               id="orderBookTitle"
               class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-primary focus:outline-none"
@@ -297,7 +315,8 @@
           <div class="mb-4 relative">
             <label class="text-xs font-bold text-gray-500 ml-1"
               >ŞAGİRD ADI</label
-            ><input
+            >
+            <input
               type="text"
               id="orderStudentName"
               class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-primary focus:outline-none"
@@ -306,8 +325,8 @@
             <div id="studentSuggestions" class="suggestions"></div>
           </div>
           <div class="mb-6">
-            <label class="text-xs font-bold text-gray-500 ml-1">SİNİF</label
-            ><input
+            <label class="text-xs font-bold text-gray-500 ml-1">SİNİF</label>
+            <input
               type="text"
               id="orderClass"
               class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed"
@@ -317,6 +336,7 @@
           </div>
           <button
             id="submitOrderBtn"
+            onclick="submitOrder()"
             class="w-full py-4 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark transition shadow-lg"
           >
             KİTABI GÖTÜR
@@ -334,10 +354,12 @@
       >
         <button
           id="closeReviewModal"
+          onclick="closeModal('reviewModal')"
           class="absolute top-5 right-6 text-gray-400 hover:text-red-500 transition"
         >
           <i class="fas fa-times text-2xl"></i>
         </button>
+
         <div id="reviewStep1" class="text-center">
           <div
             class="w-20 h-20 bg-pink-100 text-secondary rounded-full flex items-center justify-center text-3xl mx-auto mb-6 shadow-inner"
@@ -357,11 +379,13 @@
           />
           <button
             id="verifyReviewBtn"
+            onclick="verifyReviewCode()"
             class="w-full py-4 bg-secondary text-white font-bold rounded-xl hover:bg-pink-600 transition shadow-lg"
           >
             DAVAM ET <i class="fas fa-arrow-right ml-2"></i>
           </button>
         </div>
+
         <div id="reviewStep2" class="hidden text-center">
           <p class="text-xs text-gray-400 uppercase font-bold mb-1">Şagird</p>
           <h3 id="revStudentName" class="text-lg font-bold text-gray-800 mb-2">
@@ -371,6 +395,7 @@
           <h3 id="revBookTitle" class="text-lg font-bold text-primary mb-6">
             Kitab Adı
           </h3>
+
           <div
             class="flex justify-center gap-2 mb-4 text-3xl text-gray-300 cursor-pointer"
             id="starContainer"
@@ -379,6 +404,7 @@
             ><span>★</span>
           </div>
           <input type="hidden" id="reviewRating" value="0" />
+
           <textarea
             id="reviewText"
             rows="3"
@@ -389,8 +415,10 @@
           <p class="text-xs text-right text-gray-400 mb-4">
             <span id="charCount">0</span>/100
           </p>
+
           <button
             id="submitReviewBtn"
+            onclick="submitReview()"
             class="w-full py-4 bg-secondary text-white font-bold rounded-xl hover:bg-pink-600 transition shadow-lg"
           >
             GÖNDƏR
@@ -408,6 +436,7 @@
       >
         <button
           id="closeTeacherModal"
+          onclick="closeModal('teacherModal')"
           class="absolute top-4 right-4 text-gray-400 hover:text-red-500"
         >
           <i class="fas fa-times text-xl"></i>
@@ -450,6 +479,7 @@
       >
         <button
           id="closeStudentDetails"
+          onclick="closeModal('studentDetailsModal')"
           class="absolute top-5 right-6 text-gray-400 hover:text-red-500 transition"
         >
           <i class="fas fa-times text-2xl"></i>
@@ -483,6 +513,7 @@
         </div>
       </div>
     </div>
+
     <div
       id="bookDetailsModal"
       class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-[60]"
@@ -492,6 +523,7 @@
       >
         <button
           id="closeBookDetails"
+          onclick="closeModal('bookDetailsModal')"
           class="absolute top-5 right-6 text-gray-400 hover:text-red-500 transition"
         >
           <i class="fas fa-times text-2xl"></i>
