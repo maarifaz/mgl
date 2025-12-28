@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="az">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Maarif Global Library</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#9333ea",
+              secondary: "#db2777",
+              bgcolor: "#fdf4ff",
+            },
+            fontFamily: {
+              cinzel: ["Cinzel", "serif"],
+              lora: ["Lora", "serif"],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #e5e7eb;
+        border-radius: 10px;
+      }
+      .animate-fade-in {
+        animation: fadeIn 0.3s ease-out;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+      .suggestions {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        max-height: 150px;
+        overflow-y: auto;
+        z-index: 50;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        display: none;
+        margin-top: 5px;
+      }
+      .suggestion-item {
+        padding: 12px;
+        cursor: pointer;
+        font-size: 14px;
+        border-bottom: 1px solid #f3f4f6;
+        transition: 0.2s;
+      }
+      .suggestion-item:hover {
+        background: #fdf4ff;
+        color: #9333ea;
+        padding-left: 15px;
+      }
+      #toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .toast {
+        background: white;
+        padding: 16px 20px;
+        border-radius: 12px;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        border-left: 5px solid var(--primary);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 300px;
+        animation: slideIn 0.4s ease;
+        font-weight: bold;
+        font-size: 14px;
+      }
+      .toast.success {
+        border-left-color: #10b981;
+      }
+      .toast.error {
+        border-left-color: #ef4444;
+      }
+      @keyframes slideIn {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-bgcolor min-h-screen font-lora text-gray-800">
+    <div id="toast-container"></div>
+
+    <nav
+      class="bg-white/80 backdrop-blur-md sticky top-0 z-40 border-b border-pink-100 px-6 py-4 shadow-sm"
+    >
+      <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center text-white text-xl shadow-lg"
+          >
+            <i class="fas fa-infinity"></i>
+          </div>
+          <div>
+            <h1
+              class="font-cinzel font-bold text-xl text-gray-900 leading-none"
+            >
+              Infinity Library
+            </h1>
+            <p class="text-xs text-gray-500 tracking-widest uppercase">
+              Global Network
+            </p>
+          </div>
+        </div>
+        <button
+          id="btnAdminLogin"
+          class="px-6 py-2 rounded-full bg-gradient-to-r from-primary to-secondary text-white font-bold shadow-md hover:shadow-lg transition text-sm cursor-pointer"
+        >
+          <i class="fas fa-user-shield mr-2"></i> Admin Girişi
+        </button>
+      </div>
+    </nav>
+
+    <section class="text-center py-16 px-4 relative overflow-hidden">
+      <div
+        class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-r from-purple-200 to-pink-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 -z-10 animate-pulse"
+      ></div>
+      <h2
+        class="font-cinzel text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-6 drop-shadow-sm"
+      >
+        Oxu, Yarış, Kəşf Et
+      </h2>
+      <p class="text-gray-600 text-xl italic mb-10">
+        "55 ölkə, minlərlə şagird, sonsuz bilik."
+      </p>
+
+      <div class="max-w-xl mx-auto flex flex-col gap-4 relative z-10">
+        <div class="relative group">
+          <input
+            type="text"
+            placeholder="Ümumi axtarış..."
+            class="w-full px-6 py-4 rounded-2xl border-2 border-white bg-white/90 shadow-lg focus:outline-none focus:border-secondary focus:ring-2 focus:ring-pink-100 transition text-lg"
+          />
+          <i class="fas fa-search absolute right-5 top-5 text-gray-400"></i>
+        </div>
+        <div class="flex gap-3">
+          <button
+            id="btnBorrowBook"
+            class="flex-1 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold rounded-2xl shadow-xl hover:shadow-2xl hover:scale-[1.02] transition flex items-center justify-center gap-2 text-lg"
+          >
+            <i class="fas fa-book-reader"></i> KİTAB GÖTÜR
+          </button>
+          <button
+            id="btnWriteReview"
+            class="flex-1 py-4 bg-white text-secondary border-2 border-secondary font-bold rounded-2xl shadow-xl hover:bg-secondary hover:text-white hover:scale-[1.02] transition flex items-center justify-center gap-2 text-lg"
+          >
+            <i class="fas fa-pen-nib"></i> RƏY YAZ
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <main class="max-w-7xl mx-auto px-6 pb-20">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div
+          class="bg-white rounded-[2rem] p-6 shadow-xl border border-yellow-100 relative overflow-hidden"
+        >
+          <h3
+            class="font-cinzel text-xl font-bold text-gray-800 mb-6 flex items-center gap-2"
+          >
+            <i class="fas fa-crown text-yellow-500"></i> Liderlər
+          </h3>
+          <div id="topStudentsList" class="space-y-3">
+            <p class="text-center text-gray-400 py-6">Yüklənir...</p>
+          </div>
+        </div>
+        <div
+          class="bg-white rounded-[2rem] p-6 shadow-xl border border-red-100 relative overflow-hidden"
+        >
+          <h3
+            class="font-cinzel text-xl font-bold text-gray-800 mb-6 flex items-center gap-2"
+          >
+            <i class="fas fa-fire text-red-500"></i> Trendlər
+          </h3>
+          <div id="topBooksList" class="space-y-3">
+            <p class="text-center text-gray-400 py-6">Yüklənir...</p>
+          </div>
+        </div>
+        <div
+          class="bg-white rounded-[2rem] p-6 shadow-xl border border-blue-100 relative overflow-hidden"
+        >
+          <h3
+            class="font-cinzel text-xl font-bold text-gray-800 mb-6 flex items-center gap-2"
+          >
+            <i class="fas fa-history text-blue-500"></i> Aktivlik
+          </h3>
+          <div id="recentActivityList" class="space-y-3">
+            <p class="text-center text-gray-400 py-6">Yüklənir...</p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <div
+      id="borrowModal"
+      class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50"
+    >
+      <div
+        class="bg-white p-8 rounded-[2.5rem] shadow-2xl max-w-md w-full relative animate-fade-in border-4 border-green-50"
+      >
+        <button
+          id="closeBorrowModal"
+          class="absolute top-5 right-6 text-gray-400 hover:text-red-500 transition"
+        >
+          <i class="fas fa-times text-2xl"></i>
+        </button>
+        <div id="step1" class="text-center">
+          <div
+            class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-6 shadow-inner"
+          >
+            <i class="fas fa-school"></i>
+          </div>
+          <h3 class="text-2xl font-cinzel font-bold mb-2">Məktəb Kodu</h3>
+          <p class="text-gray-500 text-sm mb-6">
+            Davam etmək üçün məktəb kodunu yazın.
+          </p>
+          <input
+            type="text"
+            id="schoolCodeInput"
+            class="w-full px-4 py-4 rounded-xl border-2 border-gray-200 text-center text-xl font-bold tracking-widest uppercase focus:outline-none focus:border-green-500 transition mb-6"
+            placeholder="Məs: BAKU"
+          />
+          <button
+            id="verifyCodeBtn"
+            class="w-full py-4 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition shadow-lg"
+          >
+            YOXLA <i class="fas fa-arrow-right ml-2"></i>
+          </button>
+        </div>
+        <div id="step2" class="hidden">
+          <div
+            class="bg-green-50 p-4 rounded-2xl mb-6 text-center border border-green-100"
+          >
+            <p
+              class="text-xs text-green-600 font-bold uppercase tracking-wider"
+            >
+              Məktəb Seçildi
+            </p>
+            <h3
+              id="selectedSchoolName"
+              class="text-lg font-bold text-green-800"
+            >
+              Yüklənir...
+            </h3>
+          </div>
+          <div class="mb-4 relative">
+            <label class="text-xs font-bold text-gray-500 ml-1">KİTAB</label
+            ><input
+              type="text"
+              id="orderBookTitle"
+              class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-primary focus:outline-none"
+              placeholder="Axtar..."
+            />
+            <div id="bookSuggestions" class="suggestions"></div>
+          </div>
+          <div class="mb-4 relative">
+            <label class="text-xs font-bold text-gray-500 ml-1"
+              >ŞAGİRD ADI</label
+            ><input
+              type="text"
+              id="orderStudentName"
+              class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-primary focus:outline-none"
+              placeholder="Adını yaz..."
+            />
+            <div id="studentSuggestions" class="suggestions"></div>
+          </div>
+          <div class="mb-6">
+            <label class="text-xs font-bold text-gray-500 ml-1">SİNİF</label
+            ><input
+              type="text"
+              id="orderClass"
+              class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed"
+              readonly
+              placeholder="Avtomatik"
+            />
+          </div>
+          <button
+            id="submitOrderBtn"
+            class="w-full py-4 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark transition shadow-lg"
+          >
+            KİTABI GÖTÜR
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="reviewModal"
+      class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50"
+    >
+      <div
+        class="bg-white p-8 rounded-[2.5rem] shadow-2xl max-w-md w-full relative animate-fade-in border-4 border-pink-50"
+      >
+        <button
+          id="closeReviewModal"
+          class="absolute top-5 right-6 text-gray-400 hover:text-red-500 transition"
+        >
+          <i class="fas fa-times text-2xl"></i>
+        </button>
+        <div id="reviewStep1" class="text-center">
+          <div
+            class="w-20 h-20 bg-pink-100 text-secondary rounded-full flex items-center justify-center text-3xl mx-auto mb-6 shadow-inner"
+          >
+            <i class="fas fa-key"></i>
+          </div>
+          <h3 class="text-2xl font-cinzel font-bold mb-2">Gizli Kod</h3>
+          <p class="text-gray-500 text-sm mb-6">
+            Kitabı qaytararkən aldığınız 5 rəqəmli kodu yazın.
+          </p>
+          <input
+            type="text"
+            id="reviewCodeInput"
+            class="w-full px-4 py-4 rounded-xl border-2 border-gray-200 text-center text-3xl font-bold tracking-[10px] text-secondary focus:outline-none focus:border-secondary transition mb-6"
+            maxlength="5"
+            placeholder="•••••"
+          />
+          <button
+            id="verifyReviewBtn"
+            class="w-full py-4 bg-secondary text-white font-bold rounded-xl hover:bg-pink-600 transition shadow-lg"
+          >
+            DAVAM ET <i class="fas fa-arrow-right ml-2"></i>
+          </button>
+        </div>
+        <div id="reviewStep2" class="hidden text-center">
+          <p class="text-xs text-gray-400 uppercase font-bold mb-1">Şagird</p>
+          <h3 id="revStudentName" class="text-lg font-bold text-gray-800 mb-2">
+            Ad Soyad
+          </h3>
+          <p class="text-xs text-gray-400 uppercase font-bold mb-1">Kitab</p>
+          <h3 id="revBookTitle" class="text-lg font-bold text-primary mb-6">
+            Kitab Adı
+          </h3>
+          <div
+            class="flex justify-center gap-2 mb-4 text-3xl text-gray-300 cursor-pointer"
+            id="starContainer"
+          >
+            <span>★</span><span>★</span><span>★</span><span>★</span
+            ><span>★</span>
+          </div>
+          <input type="hidden" id="reviewRating" value="0" />
+          <textarea
+            id="reviewText"
+            rows="3"
+            maxlength="100"
+            class="w-full p-4 rounded-xl border border-gray-300 focus:border-secondary focus:outline-none text-sm mb-2"
+            placeholder="Fikirləriniz (Max 100 hərf)..."
+          ></textarea>
+          <p class="text-xs text-right text-gray-400 mb-4">
+            <span id="charCount">0</span>/100
+          </p>
+          <button
+            id="submitReviewBtn"
+            class="w-full py-4 bg-secondary text-white font-bold rounded-xl hover:bg-pink-600 transition shadow-lg"
+          >
+            GÖNDƏR
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="teacherModal"
+      class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50"
+    >
+      <div
+        class="bg-white p-8 rounded-[2rem] shadow-2xl max-w-sm w-full relative animate-fade-in"
+      >
+        <button
+          id="closeTeacherModal"
+          class="absolute top-4 right-4 text-gray-400 hover:text-red-500"
+        >
+          <i class="fas fa-times text-xl"></i>
+        </button>
+        <h3 class="text-2xl font-cinzel font-bold text-center mb-6">
+          Admin Girişi
+        </h3>
+        <form id="adminLoginForm" class="space-y-4">
+          <input
+            type="email"
+            id="email"
+            class="w-full px-4 py-3 rounded-xl border border-gray-200"
+            placeholder="Email..."
+            required
+          />
+          <input
+            type="password"
+            id="password"
+            class="w-full px-4 py-3 rounded-xl border border-gray-200"
+            placeholder="Şifrə..."
+            required
+          />
+          <button
+            type="submit"
+            id="loginBtn"
+            class="w-full py-3 bg-gradient-to-r from-primary to-secondary text-white font-bold rounded-xl"
+          >
+            Daxil Ol
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div
+      id="studentDetailsModal"
+      class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-[60]"
+    >
+      <div
+        class="bg-white p-8 rounded-[2rem] shadow-2xl max-w-lg w-full relative animate-fade-in border-4 border-yellow-50 max-h-[80vh] flex flex-col"
+      >
+        <button
+          id="closeStudentDetails"
+          class="absolute top-5 right-6 text-gray-400 hover:text-red-500 transition"
+        >
+          <i class="fas fa-times text-2xl"></i>
+        </button>
+        <div class="text-center mb-6">
+          <div
+            class="w-16 h-16 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-3"
+          >
+            <i class="fas fa-user-graduate"></i>
+          </div>
+          <h3
+            id="detailStudentName"
+            class="text-2xl font-cinzel font-bold text-gray-800"
+          >
+            Şagird Adı
+          </h3>
+          <p
+            id="detailStudentSchool"
+            class="text-sm text-gray-500 font-bold uppercase tracking-wide"
+          >
+            Məktəb Adı
+          </p>
+        </div>
+        <div class="flex-1 overflow-y-auto custom-scrollbar pr-2">
+          <h4 class="font-bold text-gray-700 mb-3 border-b pb-2">
+            Oxuduğu Kitablar və Rəylər
+          </h4>
+          <div id="studentHistoryList" class="space-y-4">
+            <p class="text-center text-gray-400">Yüklənir...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      id="bookDetailsModal"
+      class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-[60]"
+    >
+      <div
+        class="bg-white p-8 rounded-[2rem] shadow-2xl max-w-lg w-full relative animate-fade-in border-4 border-red-50 max-h-[80vh] flex flex-col"
+      >
+        <button
+          id="closeBookDetails"
+          class="absolute top-5 right-6 text-gray-400 hover:text-red-500 transition"
+        >
+          <i class="fas fa-times text-2xl"></i>
+        </button>
+        <div class="text-center mb-6">
+          <div
+            class="w-16 h-16 bg-red-100 text-red-600 rounded-xl flex items-center justify-center text-3xl mx-auto mb-3"
+          >
+            <i class="fas fa-book"></i>
+          </div>
+          <h3
+            id="detailBookTitle"
+            class="text-2xl font-cinzel font-bold text-gray-800 line-clamp-2"
+          >
+            Kitab Başlığı
+          </h3>
+          <div class="flex justify-center items-center gap-2 mt-2">
+            <span
+              id="detailBookRating"
+              class="text-2xl font-bold text-yellow-500"
+              >0.0</span
+            >
+            <div id="detailBookStars" class="text-yellow-400 text-sm">
+              ☆☆☆☆☆
+            </div>
+          </div>
+        </div>
+        <div class="flex-1 overflow-y-auto custom-scrollbar pr-2">
+          <h4 class="font-bold text-gray-700 mb-3 border-b pb-2">
+            Şagird Rəyləri
+          </h4>
+          <div id="bookReviewsList" class="space-y-4">
+            <p class="text-center text-gray-400">Yüklənir...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
