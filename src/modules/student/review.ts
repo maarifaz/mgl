@@ -3,14 +3,48 @@ import { analyzeReview } from "../../lib/ai";
 
 let currentTxId: string | null = null;
 
-// Helper: Toast mesajı göstərmək üçün
+// Helper
 const showToast = (msg: string, type: "success" | "error") => {
   // @ts-ignore
   if (window.showToast) window.showToast(msg, type);
   else alert(msg);
 };
 
-// 1. KODU YOXLAMAQ
+// =========================================================
+// 1. EVENT LISTENERS (YENİ HİSSƏ) ⚡
+// =========================================================
+// Bu hissə səhifə yüklənən kimi işə düşür və inputları izləyir
+document.addEventListener("DOMContentLoaded", () => {
+  // A. Simvol Sayğacı (0/100)
+  const textEl = document.getElementById("reviewText") as HTMLTextAreaElement;
+  const countEl = document.getElementById("charCount");
+
+  if (textEl && countEl) {
+    textEl.addEventListener("input", () => {
+      const len = textEl.value.length;
+      countEl.innerText = len.toString();
+
+      // 100-ə çatanda qızarsın
+      if (len >= 100) countEl.classList.add("text-red-500", "font-bold");
+      else countEl.classList.remove("text-red-500", "font-bold");
+    });
+  }
+
+  // B. Enter Düyməsi (Kod Girişi üçün)
+  const codeInp = document.getElementById("reviewCodeInput");
+  if (codeInp) {
+    codeInp.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault(); // Səhifə yenilənməsin
+        verifyReviewCode();
+      }
+    });
+  }
+});
+
+// =========================================================
+// 2. KODU YOXLAMAQ
+// =========================================================
 export async function verifyReviewCode() {
   const input = document.getElementById("reviewCodeInput") as HTMLInputElement;
   const code = input.value.trim();
@@ -34,7 +68,6 @@ export async function verifyReviewCode() {
 
     currentTxId = data.id;
 
-    // UI Doldur (Array check ilə təhlükəsiz)
     const sData: any = data.students;
     const bData: any = data.books;
     const stName =
@@ -45,10 +78,10 @@ export async function verifyReviewCode() {
 
     const nameEl = document.getElementById("revStudentName");
     const titleEl = document.getElementById("revBookTitle");
-
     if (nameEl) nameEl.innerText = stName;
     if (titleEl) titleEl.innerText = bkTitle;
 
+    // Keçid
     document.getElementById("reviewStep1")?.classList.add("hidden");
     document.getElementById("reviewStep2")?.classList.remove("hidden");
   } catch (e) {
@@ -57,7 +90,9 @@ export async function verifyReviewCode() {
   }
 }
 
-// 2. ULDUZ VERMƏK (Bu funksiya əskik idi!)
+// =========================================================
+// 3. ULDUZ VERMƏK
+// =========================================================
 export function setRating(n: number) {
   const stars = document.querySelectorAll("#starContainer span");
   stars.forEach((s, i) => {
@@ -70,7 +105,9 @@ export function setRating(n: number) {
   if (ratingInput) ratingInput.value = n.toString();
 }
 
-// 3. RƏYİ GÖNDƏRMƏK (AI İnteqrasiyası ilə)
+// =========================================================
+// 4. RƏYİ GÖNDƏRMƏK (AI)
+// =========================================================
 export async function submitReview() {
   const textEl = document.getElementById("reviewText") as HTMLInputElement;
   const ratingEl = document.getElementById("reviewRating") as HTMLInputElement;
@@ -90,10 +127,8 @@ export async function submitReview() {
   }
 
   try {
-    // 1. AI Təhlili
     const aiResult = await analyzeReview(bookTitle, text);
 
-    // 2. SÖYÜŞ VARSA -> STOP 🛑
     if (!aiResult.approved) {
       showToast(`⛔ ${aiResult.feedback}`, "error");
       if (btn) {
@@ -103,15 +138,14 @@ export async function submitReview() {
       return;
     }
 
-    // 3. TƏMİZDİRSƏ -> BAZAYA YAZIRIQ (approved = false)
     const { error } = await sb
       .from("transactions")
       .update({
         review_text: text,
         rating: parseInt(rating),
-        is_review_approved: false, // Admin gözləyirik
-        ai_analysis: aiResult.analysis, // Müəllim görəcək
-        ai_score: aiResult.score, // Təsdiqlənəndə veriləcək xal
+        is_review_approved: false,
+        ai_analysis: aiResult.analysis,
+        ai_score: aiResult.score,
       })
       .eq("id", currentTxId);
 
@@ -122,7 +156,6 @@ export async function submitReview() {
       "success"
     );
 
-    // Modalı bağla
     // @ts-ignore
     if (window.closeModal) window.closeModal("reviewModal");
 
@@ -132,7 +165,10 @@ export async function submitReview() {
     ) as HTMLInputElement;
     if (codeInp) codeInp.value = "";
     textEl.value = "";
-    setRating(0); // Reset rating
+    const countEl = document.getElementById("charCount");
+    if (countEl) countEl.innerText = "0"; // Sayğacı sıfırla
+
+    setRating(0);
     document.getElementById("reviewStep1")?.classList.remove("hidden");
     document.getElementById("reviewStep2")?.classList.add("hidden");
   } catch (e) {
