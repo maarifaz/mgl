@@ -23,7 +23,7 @@ const showToast = (msg: string, type: "success" | "error") => {
 // ================= 1. INIT =================
 document.addEventListener("DOMContentLoaded", async () => {
   // Auth Check
-  const role = localStorage.getItem("admin_user");
+  //const role = localStorage.getItem("admin_user");
   // if(role !== "super_admin") window.location.href = "/"; // Güvənlik üçün açarsan
 
   initMap();

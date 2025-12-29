@@ -18,7 +18,7 @@ export async function importStudentsToSupabase(file: File, schoolId: string) {
   }));
 
   // 3. Supabase-ə hamısını birdən vururuq (Bulk Insert)
-  const { error, count } = await sb.from("students").insert(formattedData);
+  const { error } = await sb.from("students").insert(formattedData);
 
   if (error) {
     console.error("Supabase Error:", error);

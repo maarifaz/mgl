@@ -34,7 +34,7 @@ declare global {
   }
 }
 
-const XLSX = window.XLSX;
+//const XLSX = window.XLSX;
 let currentTab = "active";
 let schoolId: string | null = null;
 let globalData: any[] = [];
@@ -566,7 +566,4 @@ window.addStudent = () => {
 };
 window.addBook = () => {
   window.openModal("addBookModal");
-};
-window.handleImport = async (type, input) => {
-  /* ... eyni ... */
 };
