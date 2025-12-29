@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="az">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Panel - Infinity Library</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: { colors: { primary: "#9333ea", secondary: "#db2777" } },
+        },
+      };
+    </script>
+    <style>
+      @keyframes zoomIn {
+        from {
+          opacity: 0;
+          transform: scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+      .animate-zoom {
+        animation: zoomIn 0.2s ease-out;
+      }
+    </style>
+    <script type="module" crossorigin src="https://github.com/maarifaz/mgl/assets/admin-D67-5AS0.js"></script>
+    <link rel="modulepreload" crossorigin href="https://github.com/maarifaz/mgl/assets/supabase-BZnn04Q5.js">
+  </head>
+  <body
+    class="bg-gray-50 h-screen flex overflow-hidden font-sans text-gray-800"
+  >
+    <div
+      id="toast-container"
+      class="fixed top-5 right-5 z-[9999] flex flex-col gap-2"
+    ></div>
+
+    <aside
+      class="w-64 bg-white border-r border-gray-200 flex flex-col z-10 shadow-lg overflow-y-auto"
+    >
+      <div class="p-6 border-b border-gray-100 flex items-center gap-3">
+        <div
+          class="w-8 h-8 bg-primary text-white rounded-lg flex items-center justify-center font-bold"
+        >
+          <i class="fas fa-infinity"></i>
+        </div>
+        <h1 class="font-bold text-xl tracking-tight">Admin Panel</h1>
+      </div>
+
+      <nav class="flex-1 p-4 space-y-2">
+        <p class="text-xs font-bold text-gray-400 uppercase ml-2 mt-2">
+          Jurnal (Hərəkətlər)
+        </p>
+        <button
+          onclick="switchTab('active')"
+          id="tab-active"
+          class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-purple-50 text-primary font-bold transition"
+        >
+          <i class="fas fa-book-reader"></i> Aktiv Kitablar
+        </button>
+        <button
+          onclick="switchTab('pending')"
+          id="tab-pending"
+          class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-500 hover:bg-gray-50 transition"
+        >
+          <i class="fas fa-clock"></i> Gözləyənlər
+          <span
+            id="badgePending"
+            class="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full hidden"
+            >0</span
+          >
+        </button>
+        <button
+          onclick="switchTab('reviews')"
+          id="tab-reviews"
+          class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-500 hover:bg-gray-50 transition"
+        >
+          <i class="fas fa-comment-dots"></i> Rəylər
+          <span
+            id="badgeReviews"
+            class="ml-auto bg-yellow-500 text-white text-xs px-2 py-1 rounded-full hidden"
+            >0</span
+          >
+        </button>
+        <button
+          onclick="switchTab('returned')"
+          id="tab-returned"
+          class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-500 hover:bg-gray-50 transition"
+        >
+          <i class="fas fa-history"></i> Arxiv
+        </button>
+
+        <p class="text-xs font-bold text-gray-400 uppercase ml-2 mt-6">
+          Baza (Edit/Delete)
+        </p>
+        <button
+          onclick="switchTab('students')"
+          id="tab-students"
+          class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-500 hover:bg-gray-50 transition"
+        >
+          <i class="fas fa-users"></i> Bütün Şagirdlər
+        </button>
+        <button
+          onclick="switchTab('books')"
+          id="tab-books"
+          class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-500 hover:bg-gray-50 transition"
+        >
+          <i class="fas fa-book"></i> Bütün Kitablar
+        </button>
+
+        <div class="h-px bg-gray-100 my-4"></div>
+        <button
+          onclick="openModal('addStudentModal')"
+          class="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-gray-600 hover:bg-green-50 hover:text-green-600 transition text-sm"
+        >
+          <i class="fas fa-plus-circle"></i> Şagird (+)
+        </button>
+        <button
+          onclick="document.getElementById('importStudentInput').click()"
+          class="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-gray-600 hover:bg-green-50 hover:text-green-600 transition text-sm"
+        >
+          <i class="fas fa-file-excel"></i> Excel Şagird
+        </button>
+        <input
+          type="file"
+          id="importStudentInput"
+          class="hidden"
+          accept=".xlsx, .xls"
+          onchange="handleImport('student', this)"
+        />
+
+        <button
+          onclick="openModal('addBookModal')"
+          class="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition text-sm mt-2"
+        >
+          <i class="fas fa-plus-square"></i> Kitab (+)
+        </button>
+        <button
+          onclick="document.getElementById('importBookInput').click()"
+          class="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition text-sm"
+        >
+          <i class="fas fa-file-excel"></i> Excel Kitab
+        </button>
+        <input
+          type="file"
+          id="importBookInput"
+          class="hidden"
+          accept=".xlsx, .xls"
+          onchange="handleImport('book', this)"
+        />
+      </nav>
+
+      <div class="p-4 border-t border-gray-100">
+        <div class="bg-gray-50 p-4 rounded-xl mb-3 border border-gray-200">
+          <p class="text-xs text-gray-400 uppercase font-bold mb-1">
+            Cari Məktəb
+          </p>
+          <p
+            id="adminSchoolName"
+            class="font-bold text-sm text-gray-800 break-words"
+          >
+            Yüklənir...
+          </p>
+        </div>
+        <button
+          id="logoutBtn"
+          class="w-full flex items-center justify-center gap-2 text-red-500 hover:bg-red-50 p-3 rounded-xl font-bold transition"
+        >
+          <i class="fas fa-sign-out-alt"></i> Çıxış
+        </button>
+      </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col relative overflow-hidden">
+      <header
+        class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-8 gap-6"
+      >
+        <h2 id="pageTitle" class="text-xl font-bold text-primary min-w-[200px]">
+          Aktiv Kitablar
+        </h2>
+
+        <div class="flex-1 max-w-md relative">
+          <i
+            class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+          ></i>
+          <input
+            type="text"
+            id="searchInput"
+            class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-primary transition"
+            placeholder="Axtarış (Ad, Kitab, Kod)..."
+          />
+        </div>
+
+        <div class="flex items-center gap-2">
+          <span class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
+          <span class="text-sm font-medium text-gray-500">Canlı Sistem</span>
+        </div>
+      </header>
+
+      <div class="flex-1 overflow-y-auto p-8">
+        <div
+          class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden"
+        >
+          <table class="w-full text-left border-collapse">
+            <thead
+              id="tableHead"
+              class="bg-gray-50 text-gray-500 text-xs uppercase font-bold"
+            ></thead>
+            <tbody id="tableBody" class="text-sm divide-y divide-gray-100">
+              <tr>
+                <td colspan="5" class="p-10 text-center text-gray-400">
+                  Yüklənir...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <div
+      id="addStudentModal"
+      class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50"
+    >
+      <div
+        class="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full animate-zoom"
+      >
+        <h3 class="text-lg font-bold mb-4" id="modalStudentTitle">
+          Yeni Şagird
+        </h3>
+        <input type="hidden" id="editStudentId" />
+        <input
+          type="text"
+          id="newStudentName"
+          class="w-full border p-3 rounded-lg mb-3"
+          placeholder="Ad Soyad"
+        />
+        <input
+          type="text"
+          id="newStudentClass"
+          class="w-full border p-3 rounded-lg mb-3"
+          placeholder="Sinif (Məs: 10A)"
+        />
+        <input
+          type="text"
+          id="newStudentCode"
+          class="w-full border p-3 rounded-lg mb-4"
+          placeholder="Şagird Kodu (Məs: AZ001)"
+        />
+        <div class="flex gap-2">
+          <button
+            onclick="closeModal('addStudentModal')"
+            class="flex-1 py-2 bg-gray-100 rounded-lg"
+          >
+            Ləğv
+          </button>
+          <button
+            onclick="saveStudent()"
+            class="flex-1 py-2 bg-primary text-white rounded-lg font-bold"
+          >
+            Yadda Saxla
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="addBookModal"
+      class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50"
+    >
+      <div
+        class="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full animate-zoom"
+      >
+        <h3 class="text-lg font-bold mb-4" id="modalBookTitle">Yeni Kitab</h3>
+        <input type="hidden" id="editBookId" />
+        <input
+          type="text"
+          id="newBookTitle"
+          class="w-full border p-3 rounded-lg mb-3"
+          placeholder="Kitabın Adı"
+        />
+        <input
+          type="text"
+          id="newBookAuthor"
+          class="w-full border p-3 rounded-lg mb-3"
+          placeholder="Müəllif"
+        />
+        <input
+          type="number"
+          id="newBookQty"
+          class="w-full border p-3 rounded-lg mb-4"
+          placeholder="Say (Stok)"
+        />
+        <div class="flex gap-2">
+          <button
+            onclick="closeModal('addBookModal')"
+            class="flex-1 py-2 bg-gray-100 rounded-lg"
+          >
+            Ləğv
+          </button>
+          <button
+            onclick="saveBook()"
+            class="flex-1 py-2 bg-blue-600 text-white rounded-lg font-bold"
+          >
+            Yadda Saxla
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="confirmModal"
+      class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-[60]"
+    >
+      <div
+        class="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full animate-zoom text-center"
+      >
+        <div
+          class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4"
+        >
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <h3 class="text-xl font-bold mb-2">Əminsiniz?</h3>
+        <p class="text-gray-500 text-sm mb-6">
+          Bu əməliyyat geri qaytarıla bilməz.
+        </p>
+
+        <div class="flex gap-3">
+          <button
+            onclick="closeModal('confirmModal')"
+            class="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition"
+          >
+            Ləğv Et
+          </button>
+          <button
+            onclick="confirmAction()"
+            class="flex-1 py-3 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 transition shadow-lg"
+          >
+            Bəli, Sil
+          </button>
+        </div>
+      </div>
+    </div>
+    <div
+      id="codeModal"
+      class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50"
+    >
+      <div
+        class="bg-white p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center animate-zoom"
+      >
+        <div
+          class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4"
+        >
+          <i class="fas fa-check"></i>
+        </div>
+        <h3 class="text-xl font-bold mb-2">Kitab Qaytarıldı!</h3>
+        <p class="text-gray-500 text-sm mb-6">Şagirdə bu kodu verin:</p>
+        <div
+          id="secretCodeDisplay"
+          class="bg-gray-100 p-4 rounded-xl text-3xl font-mono font-bold tracking-widest text-primary mb-6 border-2 border-dashed border-gray-300"
+        >
+          -----
+        </div>
+        <button
+          onclick="closeModal('codeModal')"
+          class="w-full py-3 bg-gray-900 text-white rounded-xl font-bold"
+        >
+          Bağla
+        </button>
+      </div>
+    </div>
+
+  </body>
+</html>
