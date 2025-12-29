@@ -499,16 +499,14 @@ window.saveStudent = async () => {
       .update({ full_name: name, class_name: cls, student_code: code })
       .eq("id", id);
   else
-    await sb
-      .from("students")
-      .insert([
-        {
-          school_id: schoolId,
-          full_name: name,
-          class_name: cls,
-          student_code: code,
-        },
-      ]);
+    await sb.from("students").insert([
+      {
+        school_id: schoolId,
+        full_name: name,
+        class_name: cls,
+        student_code: code,
+      },
+    ]);
   window.closeModal("addStudentModal");
   loadData();
   showToast("Hazır", "success");

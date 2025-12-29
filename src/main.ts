@@ -160,7 +160,7 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
           localStorage.setItem("admin_user", JSON.stringify(data));
           localStorage.setItem("school_id", data.school_id);
-          window.location.href = "/admin.html";
+          window.location.href = "./admin.html";
         }
       } catch {
         window.showToast("Sistem xətası", "error");

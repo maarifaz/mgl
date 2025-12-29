@@ -1,12 +1,12 @@
 import { defineConfig } from "vite";
 
 export default defineConfig({
+  base: "https://github.com/maarifaz/mgl", // GitHub Pages reponun adı bu olduğu için bunu yazmalısın.
   build: {
     rollupOptions: {
       input: {
-        main: "index.html", // Giriş qapısı
-        admin: "admin.html", // Admin qapısı
-        // gələcəkdə dashboard: 'dashboard.html'
+        main: "index.html",
+        admin: "admin.html",
       },
     },
   },
